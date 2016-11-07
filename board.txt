@@ -1,0 +1,29 @@
+sudoku board
+
+000619275
+060000000
+197040080
+756902000
+810000500
+009100760
+040500010
+980400057
+001098000
+
+input 
+                    [classList  
+                        [("form-control", True)
+                        ,("input-sm", True)
+                        ,("text-center", True)
+                        ,("bg-primary", highlight)
+
+                        ]
+                    , maxlength 1
+                    , id (toString (column, row))
+                    , onInput (\str -> Update (Box (castToInt str) False column row))
+                    ] 
+                    []
+
+
+
+                    rgba(255,255,255,.75); grå
