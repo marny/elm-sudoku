@@ -1,6 +1,7 @@
 module Board exposing (..)
 
 import String
+import Set
 
 (noOfColumns, noOfRows) = (9, 9)
 
@@ -45,17 +46,3 @@ boxNotEqual  : Box -> Box -> Bool
 boxNotEqual box1 box2 =
      box1.column /= box2.column || box1.row /= box2.row
 
-
-valid : Board -> (Bool, List String)
-valid board = 
-    let 
-        errorNotCompleted = 
-            if List.length board.boxes /= (noOfRows * noOfColumns) then
-                "Sudoku has empty boxes."
-            else 
-                ""
-
-        totalErrorMessages = errorNotCompleted :: []
-        errorMessages = totalErrorMessages
-    in        
-        (List.isEmpty errorMessages, errorMessages)

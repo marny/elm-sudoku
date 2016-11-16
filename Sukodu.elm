@@ -9,6 +9,7 @@ import Html.Keyed as Keyed
 import Key exposing (..)
 import Keyboard
 import String
+import ValidateBoard exposing (..)
 
 
 
@@ -38,7 +39,6 @@ type Msg = Update Box | Reset | Validate | Highlight Box | Remove Box | KeyDown 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = 
     let
-     --  boxNotEqual box1 box2 = box1.column /= box2.column || box1.row /= box2.row
         board = model.board
         keepOnBoard filterFunction = List.filter filterFunction model.board.boxes
     in
@@ -56,7 +56,7 @@ update msg model =
 
         Validate -> 
             let 
-                (ok, errorList) = valid model.board           
+                (ok, errorList) = ValidateBoard.valid model.board           
                 errorMsgs = 
                     if ok then
                         []
@@ -81,7 +81,6 @@ update msg model =
             let 
                 modelUpdated = { model | selectedBox = keyDownValue key model.selectedBox}
                 boxUpdated = modelUpdated.selectedBox
-                --debug2 = Debug.log "KeyDown 2" boxUpdated
                 boardWithoutBoxToUpdate = keepOnBoard (Board.boxNotEqual boxUpdated)
                 newBoard = { board | boxes = (boxUpdated :: boardWithoutBoxToUpdate) }
             in 

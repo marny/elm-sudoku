@@ -6270,6 +6270,137 @@ var _elm_lang$core$Process$kill = _elm_lang$core$Native_Scheduler.kill;
 var _elm_lang$core$Process$sleep = _elm_lang$core$Native_Scheduler.sleep;
 var _elm_lang$core$Process$spawn = _elm_lang$core$Native_Scheduler.spawn;
 
+var _elm_lang$core$Set$foldr = F3(
+	function (f, b, _p0) {
+		var _p1 = _p0;
+		return A3(
+			_elm_lang$core$Dict$foldr,
+			F3(
+				function (k, _p2, b) {
+					return A2(f, k, b);
+				}),
+			b,
+			_p1._0);
+	});
+var _elm_lang$core$Set$foldl = F3(
+	function (f, b, _p3) {
+		var _p4 = _p3;
+		return A3(
+			_elm_lang$core$Dict$foldl,
+			F3(
+				function (k, _p5, b) {
+					return A2(f, k, b);
+				}),
+			b,
+			_p4._0);
+	});
+var _elm_lang$core$Set$toList = function (_p6) {
+	var _p7 = _p6;
+	return _elm_lang$core$Dict$keys(_p7._0);
+};
+var _elm_lang$core$Set$size = function (_p8) {
+	var _p9 = _p8;
+	return _elm_lang$core$Dict$size(_p9._0);
+};
+var _elm_lang$core$Set$member = F2(
+	function (k, _p10) {
+		var _p11 = _p10;
+		return A2(_elm_lang$core$Dict$member, k, _p11._0);
+	});
+var _elm_lang$core$Set$isEmpty = function (_p12) {
+	var _p13 = _p12;
+	return _elm_lang$core$Dict$isEmpty(_p13._0);
+};
+var _elm_lang$core$Set$Set_elm_builtin = function (a) {
+	return {ctor: 'Set_elm_builtin', _0: a};
+};
+var _elm_lang$core$Set$empty = _elm_lang$core$Set$Set_elm_builtin(_elm_lang$core$Dict$empty);
+var _elm_lang$core$Set$singleton = function (k) {
+	return _elm_lang$core$Set$Set_elm_builtin(
+		A2(
+			_elm_lang$core$Dict$singleton,
+			k,
+			{ctor: '_Tuple0'}));
+};
+var _elm_lang$core$Set$insert = F2(
+	function (k, _p14) {
+		var _p15 = _p14;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A3(
+				_elm_lang$core$Dict$insert,
+				k,
+				{ctor: '_Tuple0'},
+				_p15._0));
+	});
+var _elm_lang$core$Set$fromList = function (xs) {
+	return A3(_elm_lang$core$List$foldl, _elm_lang$core$Set$insert, _elm_lang$core$Set$empty, xs);
+};
+var _elm_lang$core$Set$map = F2(
+	function (f, s) {
+		return _elm_lang$core$Set$fromList(
+			A2(
+				_elm_lang$core$List$map,
+				f,
+				_elm_lang$core$Set$toList(s)));
+	});
+var _elm_lang$core$Set$remove = F2(
+	function (k, _p16) {
+		var _p17 = _p16;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$remove, k, _p17._0));
+	});
+var _elm_lang$core$Set$union = F2(
+	function (_p19, _p18) {
+		var _p20 = _p19;
+		var _p21 = _p18;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$union, _p20._0, _p21._0));
+	});
+var _elm_lang$core$Set$intersect = F2(
+	function (_p23, _p22) {
+		var _p24 = _p23;
+		var _p25 = _p22;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$intersect, _p24._0, _p25._0));
+	});
+var _elm_lang$core$Set$diff = F2(
+	function (_p27, _p26) {
+		var _p28 = _p27;
+		var _p29 = _p26;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$diff, _p28._0, _p29._0));
+	});
+var _elm_lang$core$Set$filter = F2(
+	function (p, _p30) {
+		var _p31 = _p30;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(
+				_elm_lang$core$Dict$filter,
+				F2(
+					function (k, _p32) {
+						return p(k);
+					}),
+				_p31._0));
+	});
+var _elm_lang$core$Set$partition = F2(
+	function (p, _p33) {
+		var _p34 = _p33;
+		var _p35 = A2(
+			_elm_lang$core$Dict$partition,
+			F2(
+				function (k, _p36) {
+					return p(k);
+				}),
+			_p34._0);
+		var p1 = _p35._0;
+		var p2 = _p35._1;
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Set$Set_elm_builtin(p1),
+			_1: _elm_lang$core$Set$Set_elm_builtin(p2)
+		};
+	});
+
 var _elm_lang$dom$Native_Dom = function() {
 
 function on(node)
@@ -8709,22 +8840,6 @@ var _user$project$Board$boxNotEqual = F2(
 var _user$project$Board$_p0 = {ctor: '_Tuple2', _0: 9, _1: 9};
 var _user$project$Board$noOfColumns = _user$project$Board$_p0._0;
 var _user$project$Board$noOfRows = _user$project$Board$_p0._1;
-var _user$project$Board$valid = function (board) {
-	var errorNotCompleted = (!_elm_lang$core$Native_Utils.eq(
-		_elm_lang$core$List$length(board.boxes),
-		_user$project$Board$noOfRows * _user$project$Board$noOfColumns)) ? 'Sudoku has empty boxes.' : '';
-	var totalErrorMessages = A2(
-		_elm_lang$core$List_ops['::'],
-		errorNotCompleted,
-		_elm_lang$core$Native_List.fromArray(
-			[]));
-	var errorMessages = totalErrorMessages;
-	return {
-		ctor: '_Tuple2',
-		_0: _elm_lang$core$List$isEmpty(errorMessages),
-		_1: errorMessages
-	};
-};
 var _user$project$Board$Board = function (a) {
 	return {boxes: a};
 };
@@ -8812,6 +8927,126 @@ var _user$project$Key$fromCode = function (keyCode) {
 	}
 };
 
+var _user$project$ValidateBoard$uniqueNumbers = F2(
+	function (fn, board) {
+		var boxes = A2(_elm_lang$core$List$filter, fn, board.boxes);
+		var numberInBoxes = A2(
+			_elm_lang$core$List$map,
+			function (box) {
+				return box.value;
+			},
+			boxes);
+		return _elm_lang$core$Set$fromList(numberInBoxes);
+	});
+var _user$project$ValidateBoard$validColumn = F2(
+	function (column, board) {
+		var numbers = A2(
+			_user$project$ValidateBoard$uniqueNumbers,
+			function (box) {
+				return _elm_lang$core$Native_Utils.eq(box.column, column);
+			},
+			board);
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.eq(
+				_elm_lang$core$Set$size(numbers),
+				_user$project$Board$noOfColumns),
+			_1: A2(
+				_elm_lang$core$Basics_ops['++'],
+				'Column ',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(column),
+					' has duplicates or missing values'))
+		};
+	});
+var _user$project$ValidateBoard$validRow = F2(
+	function (row, board) {
+		var numbers = A2(
+			_user$project$ValidateBoard$uniqueNumbers,
+			function (box) {
+				return _elm_lang$core$Native_Utils.eq(box.row, row);
+			},
+			board);
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.eq(
+				_elm_lang$core$Set$size(numbers),
+				_user$project$Board$noOfRows),
+			_1: A2(
+				_elm_lang$core$Basics_ops['++'],
+				'Row ',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(row),
+					' has duplicates or missing values'))
+		};
+	});
+var _user$project$ValidateBoard$validateBoxes = function (fn) {
+	var boxes = A2(
+		_elm_lang$core$List$map,
+		fn,
+		_elm_lang$core$Native_List.range(1, 9));
+	var boxesWithErrors = A2(
+		_elm_lang$core$List$filter,
+		function (_p0) {
+			var _p1 = _p0;
+			return _elm_lang$core$Basics$not(_p1._0);
+		},
+		boxes);
+	return A2(
+		_elm_lang$core$List$map,
+		function (_p2) {
+			var _p3 = _p2;
+			return _p3._1;
+		},
+		boxesWithErrors);
+};
+var _user$project$ValidateBoard$validateColumns = function (board) {
+	return _user$project$ValidateBoard$validateBoxes(
+		function (col) {
+			return A2(_user$project$ValidateBoard$validColumn, col, board);
+		});
+};
+var _user$project$ValidateBoard$validateRows = function (board) {
+	return _user$project$ValidateBoard$validateBoxes(
+		function (row) {
+			return A2(_user$project$ValidateBoard$validRow, row, board);
+		});
+};
+var _user$project$ValidateBoard$allBoxesCompleted = function (board) {
+	var totalCount = _user$project$Board$noOfRows * _user$project$Board$noOfColumns;
+	var missingCount = totalCount - _elm_lang$core$List$length(board.boxes);
+	var ok = _elm_lang$core$Native_Utils.eq(missingCount, 0);
+	return {
+		ctor: '_Tuple2',
+		_0: ok,
+		_1: A2(
+			_elm_lang$core$Basics_ops['++'],
+			'There are ',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(missingCount),
+				' boxes left.'))
+	};
+};
+var _user$project$ValidateBoard$valid = function (board) {
+	var columnErrorMessages = _user$project$ValidateBoard$validateColumns(board);
+	var rowErrorMessages = _user$project$ValidateBoard$validateRows(board);
+	var _p4 = _user$project$ValidateBoard$allBoxesCompleted(board);
+	var okCompleted = _p4._0;
+	var errorNotCompleted = _p4._1;
+	var totalErrorMessages = _elm_lang$core$Basics$not(okCompleted) ? A2(
+		_elm_lang$core$List_ops['::'],
+		errorNotCompleted,
+		A2(_elm_lang$core$Basics_ops['++'], rowErrorMessages, columnErrorMessages)) : A2(_elm_lang$core$Basics_ops['++'], rowErrorMessages, columnErrorMessages);
+	return {
+		ctor: '_Tuple2',
+		_0: _elm_lang$core$List$isEmpty(totalErrorMessages),
+		_1: totalErrorMessages
+	};
+};
+
 var _user$project$Sudoku$viewKeyedEntry = function (error) {
 	return {
 		ctor: '_Tuple2',
@@ -8868,7 +9103,7 @@ var _user$project$Sudoku$update = F2(
 			case 'Reset':
 				return {ctor: '_Tuple2', _0: _user$project$Sudoku$init, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Validate':
-				var _p2 = _user$project$Board$valid(model.board);
+				var _p2 = _user$project$ValidateBoard$valid(model.board);
 				var ok = _p2._0;
 				var errorList = _p2._1;
 				var errorMsgs = ok ? _elm_lang$core$Native_List.fromArray(
