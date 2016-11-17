@@ -1,0 +1,14 @@
+{
+  "name": "sudoku",
+  "version": "1.0.0",
+  "description": "Backend Node. Frontend Elm.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Markus",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
+}

@@ -168,3 +168,26 @@ body {
     width: 992px;
   }
 }
+
+/* Table */
+.table {
+  width: 50%;
+  table-layout: fixed;
+}
+
+.table-slim {
+  width: 8%;
+}
+
+.fat-border {
+  border: 2px solid #FFF;
+}
+
+.fat-border-bottom {
+  border-bottom: 2px solid #FFF;
+}
+
+
+td.fat-border-right {
+  border-right: 2px solid #FFF !important;
+}

@@ -3,7 +3,7 @@ module Board exposing (..)
 import String
 import Set
 
-(noOfColumns, noOfRows) = (9, 9)
+(noOfColumns, noOfRows, noOfQuadrants) = (9, 9, 9)
 
 type alias Board =
     { boxes : List Box
@@ -17,6 +17,11 @@ type alias Box =
     , row : Int
     }
 
+emptyBox : Box 
+emptyBox = 
+    Box 0 False 0 0 
+
+    
 
 create : Board
 create = 
@@ -31,6 +36,17 @@ create =
           ,Box 1 True 3 9, Box 9 True 5 9, Box 8 True 6 9
           ]
 
+{-
+    123
+    456
+    789
+-}
+getQuadrant : Box -> Int
+getQuadrant box =
+    let
+        { value, locked, column, row } = box
+    in
+        (column + 2) // 3 + 3 * ((row - 1) // 3) 
 
 
 getBox : Int -> Int -> Board -> Box
@@ -42,7 +58,12 @@ getBox column row board =
         Maybe.withDefault (Box 0 False column row) (List.head matchingBoxes)
 
 
-boxNotEqual  : Box -> Box -> Bool
+boxNotEqual : Box -> Box -> Bool
 boxNotEqual box1 box2 =
      box1.column /= box2.column || box1.row /= box2.row
+
+
+count : Int -> Board -> Int
+count numberToMatch board =
+    List.length <| List.filter (\number -> number == numberToMatch)  <| List.map .value board.boxes 
 

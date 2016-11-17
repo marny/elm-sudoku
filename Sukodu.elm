@@ -2,16 +2,17 @@ module Sudoku exposing (..)
 
 import Board exposing (..)
 import Html exposing (..)
-import Html.App as App
-import Html.Attributes exposing (maxlength, class, classList, style, type', id)
-import Html.Events exposing (onClick, onInput, onDoubleClick)
+import Html.Attributes exposing (maxlength, class, classList, type_, id, disabled, tabindex, style)
+import Html.Events exposing (onClick, onInput, onDoubleClick, onFocus)
 import Html.Keyed as Keyed
 import Key exposing (..)
 import Keyboard
 import String
 import ValidateBoard exposing (..)
-
-
+import Debug
+import Http exposing (get)
+import Task exposing (Task)
+import Json.Decode as Json exposing (field)
 
 -- MODEL
 
@@ -28,12 +29,19 @@ init =
     { id = "DN 2016-11-04 Easy"
     , board = Board.create
     , validationErrors = []
-    , selectedBox = Box 0 False 0 0
+    , selectedBox = Board.emptyBox
     }
 
 
 -- UPDATE
-type Msg = Update Box | Reset | Validate | Highlight Box | Remove Box | KeyDown Int
+type Msg = Update Box 
+        | Reset 
+        | Validate 
+        | Highlight Box 
+        | Remove Box 
+        | KeyDown Int 
+        | New 
+        | DataFetched (Result Http.Error (List Box))
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -52,18 +60,20 @@ update msg model =
                     | board = newBoard
                     , selectedBox = boxUpdated} ![]
 
-        Reset -> (init, Cmd.none)
+        Reset -> 
+            let 
+                onlyLockedBoxes = List.filter (\box -> box.locked) model.board.boxes
+                newBoard = { board | boxes = onlyLockedBoxes}
+            in
+                { model 
+                    | board = newBoard } ![]
+
 
         Validate -> 
             let 
                 (ok, errorList) = ValidateBoard.valid model.board           
-                errorMsgs = 
-                    if ok then
-                        []
-                    else 
-                        errorList
             in
-            { model | validationErrors = errorMsgs } ![]
+            { model | validationErrors = errorList } ![]
 
         Highlight box ->
             { model | selectedBox = box } ![]
@@ -87,15 +97,60 @@ update msg model =
                { modelUpdated 
                     | board = newBoard } ![]
 
+        New -> 
+            ({model | selectedBox = Board.emptyBox }, fetchNewSudoku)
+
+        DataFetched (Ok data) ->
+            let
+                filteredBoxes = List.filter (\box -> box.value /= 0) data
+                newBoard = { board | boxes = filteredBoxes}
+            in
+                { model | board = newBoard} ! []
+
+        DataFetched (Err error)  ->
+            let
+                errorMessage = 
+                    case error of
+                        Http.BadUrl url -> "Bad url: " ++ url
+                        Http.BadStatus resp -> "Bad status:" ++ resp.body
+                        Http.BadPayload str resp -> str
+                        Http.Timeout -> "Timeout"
+                        Http.NetworkError -> "Network error. Check console for details."
+                       
+            in
+            { model | validationErrors = ["Oops! An error occurred: " ++ errorMessage] } ! []
+
 
 keyDownValue : Int -> Box -> Box
 keyDownValue key box =
     let
-        boxCanBeUpdated = not box.locked
-        valueToUpdate = if boxCanBeUpdated then Key.fromCode key else box.value
+        valueToUpdate = if box.locked then box.value else Key.fromCode key
     in
     { box | value = valueToUpdate }
     
+
+
+fetchNewSudoku : Cmd Msg
+fetchNewSudoku =
+    let 
+        request = Http.get "http://localhost:3000/sudoku/new" sudokuDecoder 
+    in
+        Http.send DataFetched request
+
+
+
+sudokuDecoder : Json.Decoder (List Box)
+sudokuDecoder =
+  Json.list boxDecoder
+
+
+boxDecoder : Json.Decoder Box
+boxDecoder =
+    Json.map4 Box
+        (Json.field "value" Json.int)
+        (Json.field "locked" Json.bool)
+        (Json.field "column" Json.int)
+        (Json.field "row" Json.int)
 
 
 -- VIEW
@@ -111,86 +166,86 @@ view model =
             in
                 Box value model.selectedBox.locked model.selectedBox.column model.selectedBox.row
     in
-    div 
-        [] 
-        [h2 
-            [class "cover-heading"] 
-            [text model.id]
-        ,table 
-            [class "table table-bordered", style [("border", "2px solid #FFF")]] 
-            [tbody [] (tableBody model)]
-        ,div 
-            [class "btn-group"] 
-            [button 
-                [type' "button", class "btn btn-default", onClick Reset] 
-                [text "Reset"]
-            ,button 
-                [type' "button", class "btn btn-default", onClick Validate] 
-                [text "Validate"]
+        div 
+            [] 
+            [h3 
+                [class "cover-heading"] 
+                [text model.id]
+            ,table 
+                [class "table table-bordered fat-border pull-left"] 
+                [tbody [] (tableBody model)]
+            ,div 
+                [style [("width","50px")]
+                ,class "pull-left"] 
+                [p [] []]
+            ,table
+                [class "table table-bordered fat-border table-slim pull-left"]
+                [thead [] [summaryHeader]
+                ,tbody [] (summaryTable model)]
+            ,div 
+                [class "btn-group pull-right"] 
+                [button 
+                    [type_ "button", class "btn btn-default", onClick Reset] 
+                    [text "Reset"]
+                ,button 
+                    [type_ "button"
+                    , class "btn btn-default"
+                    , onClick Validate 
+                    , disabled (ValidateBoard.allBoxesCompleted model.board)
+                    ]
+                    [text "Validate"]
+                ,button 
+                    [type_ "button", class "btn btn-default", onClick New] 
+                    [text "New"]
+                ]
+            ,div [class "clearfix"] []
+            ,div 
+                [] 
+                [Keyed.ul 
+                    [class "list-group"] <| List.map viewKeyedEntry model.validationErrors]               
             ]
-        ,div 
-            [class "text-danger"] 
-            [Keyed.ul 
-                [] <| List.map viewKeyedEntry model.validationErrors]   
-        ]
     
 
 viewKeyedEntry : String -> ( String, Html Msg )
 viewKeyedEntry error =
-    ( error, li [] [text error] )
-
-
+    ( error, li [class "list-group-item list-group-item-danger"] [text error] )
 
 
 tableBody : Model -> List (Html Msg)
 tableBody model =  
-    List.map (rows model) [1..noOfRows]
+    List.map (rows model) (List.range 1 noOfRows)
 
     
 rows : Model -> Int -> Html Msg 
 rows model row = 
     let
-        borderStyle = 
-            if row % 3 == 0 then
-                [("border-bottom", "2px solid #FFF")]
-            else
-                []
-
+        modOfThree = row % 3 == 0
     in
         tr 
-            [style borderStyle] 
-            (List.map (oneRow model row) [1..noOfColumns])
+            [classList [("fat-border-bottom", modOfThree)]] 
+            (List.map (oneRow model row) (List.range 1 noOfColumns))
 
 
 oneRow : Model -> Int -> Int -> Html Msg 
 oneRow model row column = 
     let 
         box = getBox column row model.board
-
-        borderStyle = 
-            if column % 3 == 0 then
-                [("border-right", "2px solid #FFF")]
-            else
-                []
+        modOfThree = column % 3 == 0
         highlight = box.value == model.selectedBox.value
         boxSelected = not (boxNotEqual box model.selectedBox) 
-        boxStyle = 
-            if highlight then 
-                borderStyle
-            else
-                ("background-color", "rgba(255,255,255,.25)") :: borderStyle 
-
         castToInt str = String.toInt str |> Result.toMaybe |> Maybe.withDefault 
-
+        tabindexCount column row = column + (row - 1) * 9
     in
         if box.locked then  
             td 
-                [ style borderStyle
-                , classList 
-                    [("text-center", True)
+                [classList 
+                    [("fat-border-right", modOfThree)
+                    ,("text-center", True)
                     ,("bg-primary", highlight)
+                   
                     ]
-                , onClick (Highlight box)
+                , tabindex (tabindexCount column row)
+                , onFocus (Highlight box)
                 ] 
                 [ strong 
                     [] 
@@ -198,24 +253,67 @@ oneRow model row column =
                 ]
         else if box.value > 0 then
             td 
-                [ style borderStyle
-                , classList 
+                [ classList 
                     [("text-center", True) 
+                    ,("fat-border-right", modOfThree)
                     ,("bg-primary", highlight)
-                    ,("grey", not highlight)
+                    ,("grey", not highlight)                    
                     ] 
-                , onClick (Highlight box)
+                , tabindex (tabindexCount column row)
+                , onFocus (Highlight box)
                 , onDoubleClick (Remove (Box 0 False column row))
                 ] 
                 [ text (toString box.value)]
         else
             td 
-                [ style borderStyle
-                , classList 
-                    [ ("grey", not boxSelected)
-                    , ("grey-selected", boxSelected) ]
-                , onClick (Highlight (Box 0 False column row))] 
+                [ classList 
+                    [("grey", not boxSelected)
+                    ,("fat-border-right", modOfThree)
+                    ,("grey-selected", boxSelected)
+                   
+                    ]
+                , tabindex (tabindexCount column row)
+                , onFocus (Highlight (Box 0 False column row))] 
                 []
+
+
+summaryTable : Model -> List (Html Msg)
+summaryTable model =  
+    List.map (summaryRow model) (List.range 1 noOfRows)
+
+
+summaryRow : Model -> Int -> Html Msg 
+summaryRow model num =
+    let 
+        count = Board.count num model.board
+        perfect = count == 9
+        toHigh = count > 9
+    in
+        tr 
+            [] 
+            [td 
+                [class "text-center grey"] 
+                [text (toString num)]
+            ,td 
+                [classList 
+                    [("bg-success", perfect)
+                    ,("bg-danger", toHigh)
+                    ,("text-center", True)
+                    ]
+                ]
+                [text (toString count)]
+            ]
+
+summaryHeader : Html Msg
+summaryHeader = 
+    tr 
+        [] 
+        [td [class "text-center"]
+            [strong [] [text "no"]]
+        ,td [class "text-center"]
+            [strong [] [text "#"]]
+        ]
+    
 
 
 -- SUBSCRIPTIONS
@@ -227,8 +325,8 @@ subscriptions model =
 
 
 -- MAIN
-main : Program Never
-main = App.program 
+main : Program Never Model Msg
+main = program 
     { init = (init, Cmd.none)
     , view = view
     , update = update
